@@ -24,52 +24,6 @@ export class ProductRepository {
     return this.prisma.product.create({ data });
   }
 
-  // async findTopProductsByArea(area: string) {
-  //   // Query the database directly
-  //   const groupedProducts = await this.prisma.orderItem.groupBy({
-  //     by: ['productId'],
-  //     _count: {
-  //       productId: true,
-  //     },
-  //     where: {
-  //       product: {
-  //         area,
-  //       },
-  //     },
-  //     orderBy: {
-  //       _count: {
-  //         productId: 'desc',
-  //       },
-  //     },
-  //     take: 10,
-  //   });
-  
-  //   // Get product details by IDs from the database
-  //   const productDetails = await this.prisma.product.findMany({
-  //     where: {
-  //       id: {
-  //         in: groupedProducts.map((item) => item.productId),
-  //       },
-  //     },
-  //     select: {
-  //       id: true,
-  //       name: true,
-  //       category: true,
-  //       area: true,
-  //     },
-  //   });
-  
-  //   // Map grouped products to their full details
-  //   const productDetailsMap = new Map(
-  //     productDetails.map((product) => [product.id, product])
-  //   );
-  
-  //   return groupedProducts.map((item) => ({
-  //     ...productDetailsMap.get(item.productId),
-  //     orderCount: item._count.productId,
-  //   }));
-  // }
-
   async findTopProductsByArea(area: string) {
     // Query the database directly
     const groupedProducts = await this.prisma.orderItem.groupBy({
