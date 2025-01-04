@@ -7,9 +7,28 @@ import { CreateProductDto } from './dto/create-product.dto';
 @Injectable()
 export class ProductRepository {
   constructor(
-    private cacheService: CacheService,
-    private prisma: PrismaService) {}
+    private prisma: PrismaService) { }
 
+  // Fetch products by area and categorize them by category
+  async findProductsByArea(area: string): Promise<Record<string, Product[]>> {
+    // Step 1: Fetch all products for the specified area
+    const products = await this.prisma.product.findMany({
+      where: { area },
+      orderBy: { category: 'asc' }, // Optional: Order products by category
+    });
+
+    // Step 2: Group products by category
+    const categorizedProducts = products.reduce((acc, product) => {
+      if (!acc[product.category]) {
+        acc[product.category] = [];
+      }
+      acc[product.category].push(product);
+      return acc;
+    }, {} as Record<string, Product[]>);
+
+    // Step 3: Return categorized products
+    return categorizedProducts;
+  }
   async findAll(): Promise<Product[]> {
     return this.prisma.product.findMany();
   }
@@ -43,7 +62,7 @@ export class ProductRepository {
       },
       take: 10,
     });
-  
+
     // Get product details by IDs from the database
     const productDetails = await this.prisma.product.findMany({
       where: {
@@ -58,22 +77,22 @@ export class ProductRepository {
         area: true,
       },
     });
-  
+
     // Create a map of product details for quick access
     const productDetailsMap = new Map(
       productDetails.map((product) => [product.id, product])
     );
-  
+
     // Use Array.map instead of spread operator to safely merge product data
     return groupedProducts.map((item) => {
       const product = productDetailsMap.get(item.productId);
-  
+
       if (product) {
         return Object.assign({}, product, {
           orderCount: item._count.productId,
         });
       }
-  
+
       // Return a default object or handle the case where the product is not found
       return {
         id: item.productId,
@@ -84,6 +103,5 @@ export class ProductRepository {
       };
     });
   }
-  
-  
+
 }

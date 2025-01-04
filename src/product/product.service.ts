@@ -6,6 +6,7 @@ import { GetAllProductsDTO } from './dto/get-all-products.dto';
 import { ProductDTO } from './dto/product.dto';
 import { GetTop10ProductsDTO } from './dto/get-top-10-products-by-area.dto';
 import { CacheService } from 'src/caching/caching.service';
+import { Product } from '@prisma/client';
 
 @Injectable()
 export class ProductService {
@@ -49,4 +50,7 @@ export class ProductService {
     return topProducts;
   }
   
+  async findProductsByArea(area: string): Promise<Record<string, Product[]>> {
+    return this.productsRepository.findProductsByArea(area);
+  }
 }
