@@ -9,8 +9,8 @@ export class ProductController {
   constructor(private readonly productsService: ProductService) {}
 
   @Get()
-  async getAllProducts(@Query() filters: GetAllProductsDTO) {
-    return this.productsService.getAllProducts(filters);
+  async getProductsByArea(@Query() filters: GetAllProductsDTO) {
+    return this.productsService.findProductsByArea(filters.area);
   }
 
   @Get('top')
@@ -23,8 +23,8 @@ export class ProductController {
     }
   }
 
-  @Get(':id')
-  async getProductById(@Param('id') id: string) {
-    return this.productsService.getProductById(Number(id));
-  }
+  // @Get(':id')
+  // async getProductById(@Param('id') id: string) {
+  //   return this.productsService.getProductById(Number(id));
+  // }
 }
