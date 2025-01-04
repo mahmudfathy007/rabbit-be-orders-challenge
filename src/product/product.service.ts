@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { ProductRepository } from './product.repository';
 import { CreateProductDto } from './dto/create-product.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { GetAllProductsDTO } from './dto/get-all-products.dto';
+import { GetAllProductsDTO } from './dto/get-all-products';
+import { GetAllProductsCategorizedDTO } from './dto/get-all-products-categorized.dto';
 import { ProductDTO } from './dto/product.dto';
 import { GetTop10ProductsDTO } from './dto/get-top-10-products-by-area.dto';
 import { CacheService } from 'src/caching/caching.service';
@@ -12,22 +13,47 @@ import { Product } from '@prisma/client';
 export class ProductService {
   constructor(
     private readonly productsRepository: ProductRepository,
-    private prismaService: PrismaService,
     private cacheService: CacheService,
-  ) {}
+  ) { }
 
-  async getAllProducts(filters: GetAllProductsDTO): Promise<ProductDTO[]> {
-    if (filters.categories && filters.categories.length) {
-      const products = [];
-      for (let i = 0; i < filters.categories.length; i++) {
-        products.push(
-          await this.prismaService.product.findFirst({
-            where: { category: filters.categories[i] },
-          }),
-        );
-      }
+  async getAllProducts(filters: GetAllProductsDTO) {
+    const {
+      categories,
+      search,
+      sortBy = 'createdAt',
+      sortOrder = 'asc',
+      page = 1,
+      pageSize = 10,
+      area,
+    } = filters;
+
+    // Construct filters
+    const where = {};
+    if (categories && categories.length) {
+      where['category'] = { in: categories };
     }
-    return this.prismaService.product.findMany();
+    if (area) {
+      where['area'] = area; // Add area condition if provided
+    }
+    // Construct sorting and pagination
+    const orderBy = { [sortBy]: sortOrder };
+    const skip = (page - 1) * pageSize;
+    const take = pageSize;
+
+    // Fetch data
+    const products = await this.productsRepository.findAll(where, orderBy, skip, take ,area);
+    const totalProducts = await this.productsRepository.count(where);
+    const totalPages = Math.ceil(totalProducts / pageSize)
+
+    return {
+      data: products,
+      pagination: {
+        totalProducts: totalProducts,
+        page,
+        pageSize,
+        totalPages: Math.ceil(totalProducts / pageSize),
+      },
+    };
   }
 
   async getProductById(id: number): Promise<ProductDTO> {
@@ -49,7 +75,7 @@ export class ProductService {
 
     return topProducts;
   }
-  
+
   async findProductsByArea(area: string): Promise<Record<string, Product[]>> {
     return this.productsRepository.findProductsByArea(area);
   }
