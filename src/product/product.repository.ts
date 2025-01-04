@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma, Product } from '@prisma/client';
-import { CacheService } from 'src/caching/caching.service';
 import { CreateProductDto } from './dto/create-product.dto';
 
 @Injectable()
@@ -29,8 +28,26 @@ export class ProductRepository {
     // Step 3: Return categorized products
     return categorizedProducts;
   }
-  async findAll(): Promise<Product[]> {
-    return this.prisma.product.findMany();
+
+  async findAll(
+    filters: Prisma.ProductWhereInput,
+    orderBy: Prisma.ProductOrderByWithRelationInput,
+    skip: number,
+    take: number,
+    area: string
+  ): Promise<Product[]> {
+    return this.prisma.product.findMany({
+      where: filters,
+      orderBy,
+      skip,
+      take,
+    });
+  }
+
+  async count(filters: Prisma.ProductWhereInput): Promise<number> {
+    return this.prisma.product.count({
+      where: filters,
+    });
   }
 
   async findById(id: number): Promise<Product | null> {
